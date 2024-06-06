@@ -152,8 +152,8 @@ $(document).ready(function () {
       // before we go further, wait for the map to fully load
       initState();          // init app state. This is the app "entry point"
 
-console.log(DATA);
-console.log(CONFIG);
+// console.log(DATA);
+// console.log(CONFIG);
 
     }); // Promise.then()
 
@@ -211,8 +211,8 @@ function initDataFormat(data) {
   DATA.country_data = data[2];
   DATA.rawdata = data[1];
   DATA.filtered = data[1].features;
-  console.log(DATA.rawdata)
-  console.log(DATA.filtered)
+  // console.log(DATA.rawdata)
+  // console.log(DATA.filtered)
 
 
 
@@ -237,8 +237,8 @@ function initDataFormat(data) {
   let transformedGeoJSON = transformGeoJSON(data[1]);
   DATA.rawdata = transformedGeoJSON;
   DATA.filtered = transformedGeoJSON.features;
-  console.log(DATA.rawdata)
-  console.log(DATA.filtered)
+  // console.log(DATA.rawdata)
+  // console.log(DATA.filtered)
 
 
   // get the list of valid statuses, for data checks, below
@@ -676,9 +676,9 @@ function initSearch() {
   });
   // add data documents to be searched
   let documents = [];
-  console.log(DATA.rawdata)
+  // console.log(DATA.rawdata)
   DATA.rawdata.features.forEach(function(feature) {
-    console.log(feature)
+    // console.log(feature)
     documents.push(feature);
   });
   CONFIG.searchengine.addDocuments(documents);
