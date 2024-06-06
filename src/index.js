@@ -65,11 +65,11 @@ CONFIG.attributes = {
   'project': {name: 'Project name', format: 'string', classname: 'project', table: true, popup: true, search: true},
   'unit': {name: 'Segment name', format: 'string', classname: 'unit', table: true, popup: true, search: false},
   'type': {name: 'Type', format: 'string', classname: 'type', table: true, popup: true, search: false},
-  'countries': {name: 'Countries', format: 'string', classname: 'country', table: true, popup: false, search: true},
-  'status': {name: 'Status', format: 'string', classname: 'status', table: true, popup: true, search: false},
+  'country': {name: 'Countries', format: 'string', classname: 'country', table: true, popup: false, search: true},
+  'status_tabular': {name: 'Status', format: 'string', classname: 'status', table: true, popup: true, search: false},
   'capacity': {name: 'Capacity (boe/day)', format: 'variable_float', classname: 'capacity', table: true, popup: true, search: false, tooltip: 'boe/day: barrels of oil equivalent per day'},
   'parent': {name: 'Parent', format: 'string', classname: 'owner', table: true, popup: true, search: true},
-  'capacity_unit': {name: 'Capacity unit', format: 'string', classname: 'units', table: false, popup: false, search: false},
+  // 'capacity_unit': {name: 'Capacity unit', format: 'string', classname: 'units', table: false, popup: false, search: false},
   // 'start_year': {name: 'Start year', format: 'string', classname: 'start', table: true, popup: true, search: false},
   'url': {name: 'Wiki page', format: 'string', table: false, popup: false, search: false},
 };
@@ -115,8 +115,8 @@ CONFIG.status_types = {
 
 // Fossil types: The types of projects. These will form a second set of checkboxes on the map
 CONFIG.fossil_types = {
-  'oil_pipelines': {text: 'Oil Pipelines', shape: 'line', order: 1},
-  'ngl_pipelines': {text: 'NGL Pipelines', shape: 'line', order: 2},
+  'Oil Pipelines': {text: 'Oil Pipelines', shape: 'line', order: 1},
+  'NGL Pipelines': {text: 'NGL Pipelines', shape: 'line', order: 2},
 }
 
 // Note: prunecluster.markercluster.js needs this, and I have not found a better way to provide it
@@ -209,10 +209,10 @@ function initData(url, type) {
 function initDataFormat(data) {
   // set country data equal to the second data object from the initData() Promise()
   DATA.country_data = data[2];
-  DATA.rawjsondata = data[1];
-  DATA.filteredjsondata = data[1].features;
-  console.log(DATA.rawjsondata)
-  console.log(DATA.filteredjsondata)
+  DATA.rawdata = data[1];
+  DATA.filtered = data[1].features;
+  console.log(DATA.rawdata)
+  console.log(DATA.filtered)
 
 
 
@@ -235,10 +235,10 @@ function initDataFormat(data) {
 
   // Transform the GeoJSON data
   let transformedGeoJSON = transformGeoJSON(data[1]);
-  DATA.rawjsondata = transformedGeoJSON;
-  DATA.filteredjsondata = transformedGeoJSON.features;
-  console.log(DATA.rawjsondata)
-  console.log(DATA.filteredjsondata)
+  DATA.rawdata = transformedGeoJSON;
+  DATA.filtered = transformedGeoJSON.features;
+  console.log(DATA.rawdata)
+  console.log(DATA.filtered)
 
 
   // get the list of valid statuses, for data checks, below
@@ -327,7 +327,7 @@ function initDataFormat(data) {
     props.forEach(function(property) {
       let thisprop = row[property];
       // formatting and special cases
-      if (property == 'country') thisprop = formatCountryList(thisprop); 
+      if (property == 'countries') thisprop = formatCountryList(thisprop); 
 
       if (property == 'id') thisprop = feature.id; // use the same id set at feature level for search
 
@@ -340,7 +340,7 @@ function initDataFormat(data) {
 
   });
 
-  // Final step: keep a reference to this geojson in DATA
+  // // Final step: keep a reference to this geojson in DATA
   // DATA.rawdata = geojson; // this should be duplicative from up top
   // DATA.filtered = geojson.features; // this should be duplicative from up top
   // console.log(DATA.rawdata)
@@ -676,6 +676,7 @@ function initSearch() {
   });
   // add data documents to be searched
   let documents = [];
+  console.log(DATA.rawdata)
   DATA.rawdata.features.forEach(function(feature) {
     console.log(feature)
     documents.push(feature);
@@ -814,17 +815,17 @@ function initMap() {
   // country hover is annoying at high zoom
   CONFIG.map.on('zoomend', function() {
     if (CONFIG.map.getZoom() > 10) {
-      CONFIG.countries.removeFrom(CONFIG.map);
+      CONFIG.country.removeFrom(CONFIG.map);
     } else {
-      CONFIG.countries.addTo(CONFIG.map);
+      CONFIG.country.addTo(CONFIG.map);
     }
   });
 }
 
 function initMapLayers() {
   // Add a layer to hold countries, for click and hover (not mobile) events on country features
-  CONFIG.countries = L.featureGroup([], { pane: 'country-hover' }).addTo(CONFIG.map);
-  const countries = L.geoJSON(DATA.country_data,{ style: CONFIG.country_no_style, onEachFeature: massageCountryFeaturesAsTheyLoad }).addTo(CONFIG.countries);
+  CONFIG.country= L.featureGroup([], { pane: 'country-hover' }).addTo(CONFIG.map);
+  const country= L.geoJSON(DATA.country_data,{ style: CONFIG.country_no_style, onEachFeature: massageCountryFeaturesAsTheyLoad }).addTo(CONFIG.country);
 
   // add a layer to hold any selected country
   CONFIG.selected_country = {};
@@ -1236,7 +1237,7 @@ function drawMap(filter=true) {
         CONFIG.feature_hover.clearLayers();
       });
 
-      let status = feature.properties.status;
+      let status = feature.properties.status_tabular;
       let cssclass = `status${CONFIG.status_types[status]['order']}`;
       // fossil-feature class allows us to distinguish between fossil features and countries on hover
       layer.setStyle({ 
@@ -1279,7 +1280,7 @@ function filterData() {
 
   // filter raw data for the current set of checkboxes.
   DATA.filtered = DATA.rawdata.features.filter(function(d) {
-    return statuses.indexOf(d.properties.status) > -1 && types.indexOf(d.properties.type) > -1;
+    return statuses.indexOf(d.properties.status_tabular) > -1 && types.indexOf(d.properties.type) > -1;
   });
 }
 
@@ -1292,7 +1293,7 @@ function updateClusters(data) {
   // iterate over the current set of filtered data and set up the clusters
   data.forEach(function(feature) {
     // the "status" of the tracker point affects its icon color
-    let status = feature.properties.status;
+    let status = feature.properties.status_tabular;
     let type = feature.properties.type;
 
     // the following are used to symbolize "spidered" (unclustered) markers
@@ -1357,8 +1358,8 @@ function updateResultsPanel(title=CONFIG.default_title, countrysearch=false) {
     data = [];
     DATA.rawdata.features.forEach(function(feature) {
       // look for matching names in feature.properties.country
-      let countries = feature.properties['countries'].split(',').map(item => item.trim());
-      if (countries.indexOf(title) > -1) data.push(feature);
+      let country= feature.properties['country'].split(',').map(item => item.trim());
+      if (country.indexOf(title) > -1) data.push(feature);
     });
   } else {
     data = DATA.filtered;
@@ -1385,7 +1386,7 @@ function updateResultsPanel(title=CONFIG.default_title, countrysearch=false) {
     data.forEach(function(d) {
       // count matching type, but only if the accompanying checkbox is checked
       // and its process is selected
-      if (d.properties.status == type) count += 1;
+      if (d.properties.status_tabular == type) count += 1;
     });
     // format label for type(s) and add to results
     // show a count for all types, whether 0 or >0
@@ -1445,7 +1446,7 @@ function getTableData(incoming_data) {
         value = 'n/a';
       } else if (name == 'project') {
         value = '<a href="' + tracker.properties['url'] + '" target="_blank" title="click to open the Wiki page for this project">' + tracker.properties.project + '</a>';
-      } else if (name == 'status') {
+      } else if (name == 'status_tabular') {
         value = CONFIG.status_types[value].text;
       } else if (name == 'type') {
         value = CONFIG.fossil_types[value].text;
@@ -1516,7 +1517,7 @@ function massageCountryFeaturesAsTheyLoad(rawdata,feature) {
       // keep a reference to the hovered featured feature
       // and unhighlight other countries that may already be highlighted
       const name = this.feature.properties['NAME'];
-      if (name != CONFIG.hovered) CONFIG.countries.setStyle(CONFIG.country_no_style);
+      if (name != CONFIG.hovered) CONFIG.country.setStyle(CONFIG.country_no_style);
       CONFIG.hovered = name;
       // then highlight this country
       this.setStyle(CONFIG.country_hover_style);
@@ -1643,7 +1644,7 @@ function openTrackerInfoPanel(feature) {
     } else {
       value = CONFIG.format[CONFIG.attributes[attr].format](value);
       // custom handler for status: get the formatted string
-      if (attr == 'status') value = CONFIG.status_types[value].text;
+      if (attr == 'status_tabular') value = CONFIG.status_types[value].text;
       // custom handler for type: get the formatted string
       if (attr == 'type') value = CONFIG.fossil_types[value].text;
     }
