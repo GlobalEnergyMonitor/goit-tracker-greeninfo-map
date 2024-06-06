@@ -135,6 +135,7 @@ $(document).ready(function () {
   // data initialization first, then the remaining init steps
   Promise.all([
       initData('./static/data/data.csv', 'csv'), 
+      initData('./static/data/Oil Infrastructure - map data 2024-06-06_1114.geojson', 'json'),
       initData('./static/data/countries.json', 'json')
     ]).then(function(data) {
       initDataFormat(data)    // get data ready for use
@@ -207,7 +208,38 @@ function initData(url, type) {
 // Data formatting routines, to get the static, raw data files into the form we need it in
 function initDataFormat(data) {
   // set country data equal to the second data object from the initData() Promise()
-  DATA.country_data = data[1];
+  DATA.country_data = data[2];
+  DATA.rawjsondata = data[1];
+  DATA.filteredjsondata = data[1].features;
+  console.log(DATA.rawjsondata)
+  console.log(DATA.filteredjsondata)
+
+
+
+  // Function to transform the GeoJSON data
+  function transformGeoJSON(geojson) {
+    geojson.features.forEach(feature => {
+      // Move the `id` property from `properties` to the feature level
+      feature.id = feature.properties.id;
+      delete feature.properties.id; // Remove the `id` from `properties` after moving it
+
+      // Other transformations can be done here if needed
+      // lets handle country with format and make it countries need to update geojson
+      // lets change status_tab to status
+      // lets add capacity unit in
+      // i htink that's it 
+    });
+
+    return geojson;
+  }
+
+  // Transform the GeoJSON data
+  let transformedGeoJSON = transformGeoJSON(data[1]);
+  DATA.rawjsondata = transformedGeoJSON;
+  DATA.filteredjsondata = transformedGeoJSON.features;
+  console.log(DATA.rawjsondata)
+  console.log(DATA.filteredjsondata)
+
 
   // get the list of valid statuses, for data checks, below
   let statuses = Object.keys(CONFIG.status_types);
@@ -309,8 +341,10 @@ function initDataFormat(data) {
   });
 
   // Final step: keep a reference to this geojson in DATA
-  DATA.rawdata = geojson;
-  DATA.filtered = geojson.features;
+  // DATA.rawdata = geojson; // this should be duplicative from up top
+  // DATA.filtered = geojson.features; // this should be duplicative from up top
+  // console.log(DATA.rawdata)
+  // console.log(DATA.filtered)
 }
 
 // take our oddly formatted country lists and normalize it, standardize it
@@ -643,6 +677,7 @@ function initSearch() {
   // add data documents to be searched
   let documents = [];
   DATA.rawdata.features.forEach(function(feature) {
+    console.log(feature)
     documents.push(feature);
   });
   CONFIG.searchengine.addDocuments(documents);
