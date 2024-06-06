@@ -7,7 +7,7 @@
   "author": "Tom Allnutt <tom@greeninfo.org>",
   "license": "MIT",
   "scripts": {
-    "start": "webpack serve --port 2482 --open --config webpack.dev.config.js",
+    "start": "webpack serve --port 2485 --open --config webpack.dev.config.js",
     "build": "webpack --config webpack.build.config.js"
   },
   "devDependencies": {
