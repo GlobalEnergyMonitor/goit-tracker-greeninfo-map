@@ -135,7 +135,7 @@ $(document).ready(function () {
   // data initialization first, then the remaining init steps
   Promise.all([
       initData('./static/data/data.csv', 'csv'), 
-      initData('./static/data/Oil Infrastructure - map data 2024-06-06_1114.geojson', 'json'),
+      initData('./static/data/Oil Infrastructure - map data 2024-06-12_1934.geojson', 'json'),
       initData('./static/data/countries.json', 'json')
     ]).then(function(data) {
       initDataFormat(data)    // get data ready for use
